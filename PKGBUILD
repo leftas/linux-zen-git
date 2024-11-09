@@ -2,7 +2,7 @@
 # Original PKGBUILD Contributor: Patrick Bartels <p4ddy.b@gmail.com>
 # Thanks to Bregol
 pkgname="linux-zen-git"
-pkgver=6.6.10+1219797+g0c2d40dc6a85
+pkgver=6.11.7+1299379+g359b304f87eb
 _kernver=4.19.0+783746+g54d1f99f63e9
 pkgdesc="Featureful kernel including various new features, code and optimizations to better suit desktops"
 url="https://github.com/damentz/zen-kernel"
@@ -17,14 +17,14 @@ pkgrel=1
 options=("!strip")
 source=("linux-zen.conf"
         "linux-zen.preset"
-        'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.7/main'
+        'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.11/main'
         'allow-disable-msr-lockdown.patch')
 sha256sums=('6373073ad943e068478ef1373be4eb2a7e473da8743d946f1f50cd364685ab87'
             '18fe6b2664a9a740544c4cb990efe5ec933d6e64caf9e5d0a6ced92af0027c2d'
             'SKIP'
             'd19b97eb71b00d750c76aaf4bb2c4f783bebdfd36eb262219214e450c891a41d')
 
-_CORES=1
+_CORES=32
 
 # compress the modules or not
 _compress="y"
@@ -94,8 +94,6 @@ build() {
 			warning "save it as '.config' and run 'make oldconfig' in order to update it."
 			warning "Having done that you can run 'makepkg' again."
 			plain   ""
-
-			return 1
 		else
 			msg "Using saved zen-config file in build root."
 			cp "${srcdir}/../zen-config" "${srcdir}/build/.config"
