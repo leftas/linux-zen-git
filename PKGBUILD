@@ -2,7 +2,7 @@
 # Original PKGBUILD Contributor: Patrick Bartels <p4ddy.b@gmail.com>
 # Thanks to Bregol
 pkgname="linux-zen-git"
-pkgver=6.11.7+1299379+g359b304f87eb
+pkgver=6.12.1+1311858+g9c5f97ba6b97
 _kernver=4.19.0+783746+g54d1f99f63e9
 pkgdesc="Featureful kernel including various new features, code and optimizations to better suit desktops"
 url="https://github.com/damentz/zen-kernel"
@@ -17,14 +17,14 @@ pkgrel=1
 options=("!strip")
 source=("linux-zen.conf"
         "linux-zen.preset"
-        'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.11/main'
-        'allow-disable-msr-lockdown.patch')
+        'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.12/main')
+        #'allow-disable-msr-lockdown.patch')
 sha256sums=('6373073ad943e068478ef1373be4eb2a7e473da8743d946f1f50cd364685ab87'
             '18fe6b2664a9a740544c4cb990efe5ec933d6e64caf9e5d0a6ced92af0027c2d'
-            'SKIP'
-            'd19b97eb71b00d750c76aaf4bb2c4f783bebdfd36eb262219214e450c891a41d')
+            'SKIP')
+#            'd19b97eb71b00d750c76aaf4bb2c4f783bebdfd36eb262219214e450c891a41d')
 
-_CORES=32
+_CORES=2
 
 # compress the modules or not
 _compress="y"
@@ -53,7 +53,7 @@ pkgver() {
 build() {
 	cd "${srcdir}/zen-kernel"
 		
-	patch -Np1 -i "${srcdir}/allow-disable-msr-lockdown.patch"
+#	patch -Np1 -i "${srcdir}/allow-disable-msr-lockdown.patch"
 		
 	# don't run depmod on 'make install'. We'll do this ourselves in packaging
 	sed -i '2iexit 0' scripts/depmod.sh
