@@ -163,7 +163,7 @@ package_linux-zen-git() {
 	cd "${srcdir}/build"
 
 	msg2 "Removing links to source and build directory..."
-	rm "$pkgdir/lib/modules/$_kernver/"{build,source}
+	rm "$pkgdir/lib/modules/$_kernver/build"
 
 	msg2 "Updating kernel version in install script..."
 	sed -i "s/_kernel_version=.*/_kernel_version=$_kernver/" \
