@@ -2,7 +2,7 @@
 # Original PKGBUILD Contributor: Patrick Bartels <p4ddy.b@gmail.com>
 # Thanks to Bregol
 pkgname="linux-zen-git"
-pkgver=6.14.11+1341337+g17bb36bfa64c
+pkgver=6.15.5+1355811+g7b9bc5b523e9
 _kernver=4.19.0+783746+g54d1f99f63e9
 pkgdesc="Featureful kernel including various new features, code and optimizations to better suit desktops"
 url="https://github.com/damentz/zen-kernel"
@@ -14,17 +14,17 @@ arch=("i686" "x86_64")
 conflicts=("linux-zen")
 provides=("linux-zen")
 pkgrel=1
-options=("!strip")
+options=(!strip !debug)
 source=("linux-zen.conf"
   "linux-zen.preset"
   'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.15/main')
 #'allow-disable-msr-lockdown.patch')
 sha256sums=('6373073ad943e068478ef1373be4eb2a7e473da8743d946f1f50cd364685ab87'
-  '18fe6b2664a9a740544c4cb990efe5ec933d6e64caf9e5d0a6ced92af0027c2d'
+  '71ac2dc114a2d56a75c1aa1b613fc0af7ee0af452536e4f2d5418909218d7be2'
   'SKIP')
 #            'd19b97eb71b00d750c76aaf4bb2c4f783bebdfd36eb262219214e450c891a41d')
 
-_CORES=2
+_CORES=15
 
 # compress the modules or not
 _compress="y"
@@ -136,7 +136,7 @@ package_linux-zen-git() {
   install -D -m644 "arch/x86/boot/bzImage" "$pkgdir/boot/vmlinuz-linux-zen"
 
   msg2 "Installing modules (and firmware files)..."
-  make INSTALL_MOD_PATH="$pkgdir" modules_install
+  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir" modules_install INSTALL_MOD_STRIP=1
 
   if [ -d "$pkgdir/lib/firmware" ]; then
     msg2 "Removing firmware files..."
@@ -177,8 +177,8 @@ package_linux-zen-git() {
 
   install -D -m644 "${srcdir}/linux-zen.preset" \
     "$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
-  sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
-    "$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
+  #sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
+  #  "$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
 
   # Now we call depmod...
   depmod -b "$pkgdir" -F System.map "$_kernver"
