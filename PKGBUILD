@@ -115,79 +115,79 @@ build() {
 }
 
 package_linux-zen-git() {
-  depends=("coreutils" "linux-firmware" "kmod" "mkinitcpio>=0.5.20")
-  provides=("linux-zen" "linux-zen-git")
-  optdepends=("linux-zen-git-headers: to build third party modules such as NVIDIA drivers or OSSv4"
-    "crda: to set the correct wireless channels of your country")
-  backup=(etc/mkinitcpio.d/linux-zen.conf)
-  install=linux-zen.install
+	depends=("coreutils" "linux-firmware" "kmod" "initramfs")
+	provides=("linux-zen" "linux-zen-git")
+	optdepends=("linux-zen-git-headers: to build third party modules such as NVIDIA drivers or OSSv4"
+	            "crda: to set the correct wireless channels of your country")
+	backup=(etc/mkinitcpio.d/linux-zen.conf)
+	install=linux-zen.install
 
-  msg2 "Determining kernel name..."
-  cd "${srcdir}/build"
-  _kernver="$(make kernelrelease -s)"
-  msg2 "Kernel release name is: $_kernver"
+	msg2 "Determining kernel name..."
+	cd "${srcdir}/build"
+	_kernver="$(make kernelrelease -s)"
+	msg2 "Kernel release name is: $_kernver"
 
-  cd "${srcdir}/build"
-  mkdir -p "$pkgdir/usr/lib"
+	cd "${srcdir}/build"
+	mkdir -p "$pkgdir/usr/lib"
 
-  cd "${srcdir}/build"
+	cd "${srcdir}/build"
 
-  msg2 "Installing kernel image..."
-  install -D -m644 "arch/x86/boot/bzImage" "$pkgdir/boot/vmlinuz-linux-zen"
+	msg2 "Installing kernel image..."
+	install -D -m644 "arch/x86/boot/bzImage" "$pkgdir/boot/vmlinuz-linux-zen"
 
-  msg2 "Installing modules (and firmware files)..."
-  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir" modules_install INSTALL_MOD_STRIP=1
+	msg2 "Installing modules (and firmware files)..."
+	make INSTALL_MOD_PATH="$pkgdir" modules_install
 
-  if [ -d "$pkgdir/lib/firmware" ]; then
-    msg2 "Removing firmware files..."
-    rm -r "$pkgdir/lib/firmware"
-  fi
+	if [ -d "$pkgdir/lib/firmware" ]; then
+		msg2 "Removing firmware files..."
+		rm -r "$pkgdir/lib/firmware"
+	fi
+	
+	if [ $_compress = "y" ]; then
+		msg2 "Compressing kernel modules with gzip..."
+		find "${pkgdir}" -name '*.ko' -exec gzip -9 {} \;
+	fi
+	
+	# make room for external modules
+	if [ -d "${pkgdir}/usr/lib/modules/extramodules-*" ]; then
+		rmdir "${pkgdir}/usr/lib/modules/extramodules-*" &> /dev/null
+	fi
 
-  if [ $_compress = "y" ]; then
-    msg2 "Compressing kernel modules with gzip..."
-    find "${pkgdir}" -name '*.ko' -exec gzip -9 {} \;
-  fi
+	# add real version for building modules and running depmod from post_install/upgrade
+	mkdir -p "${pkgdir}/usr/lib/modules/extramodules-${_kernver}"
+	echo "${_kernver}" > "${pkgdir}/usr/lib/modules/extramodules-${_kernver}/version"
+	
+	# symlink extra
+	mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}"
+	cd "${pkgdir}/usr/lib/modules/${_kernver}"
+	ln -s "../extramodules-${_kernver}" "./extramodules"
 
-  # make room for external modules
-  if [ -d "${pkgdir}/usr/lib/modules/extramodules-*" ]; then
-    rmdir "${pkgdir}/usr/lib/modules/extramodules-*" &>/dev/null
-  fi
+	cd "${srcdir}/build"
 
-  # add real version for building modules and running depmod from post_install/upgrade
-  mkdir -p "${pkgdir}/usr/lib/modules/extramodules-${_kernver}"
-  echo "${_kernver}" >"${pkgdir}/usr/lib/modules/extramodules-${_kernver}/version"
+	msg2 "Removing links to source and build directory..."
+	rm "$pkgdir/lib/modules/$_kernver/build"
 
-  # symlink extra
-  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}"
-  cd "${pkgdir}/usr/lib/modules/${_kernver}"
-  ln -s "../extramodules-${_kernver}" "./extramodules"
+	msg2 "Updating kernel version in install script..."
+	sed -i "s/_kernel_version=.*/_kernel_version=$_kernver/" \
+		"$startdir/linux-zen.install"
 
-  cd "${srcdir}/build"
+	msg2 "Installing files for mkinitcpio..."
+	install -D -m644 "${srcdir}/linux-zen.conf" \
+		"$pkgdir/etc/mkinitcpio.d/linux-zen.conf"
+	
+	install -D -m644 "${srcdir}/linux-zen.preset" \
+		"$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
+	sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
+		"$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
 
-  msg2 "Removing links to source and build directory..."
-  rm "$pkgdir/lib/modules/$_kernver/build"
-
-  msg2 "Updating kernel version in install script..."
-  sed -i "s/_kernel_version=.*/_kernel_version=$_kernver/" \
-    "$startdir/linux-zen.install"
-
-  msg2 "Installing files for mkinitcpio..."
-  install -D -m644 "${srcdir}/linux-zen.conf" \
-    "$pkgdir/etc/mkinitcpio.d/linux-zen.conf"
-
-  install -D -m644 "${srcdir}/linux-zen.preset" \
-    "$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
-  #sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
-  #  "$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
-
-  # Now we call depmod...
-  depmod -b "$pkgdir" -F System.map "$_kernver"
-
-  # move module tree /lib -> /usr/lib
-  cp -a "$pkgdir/lib" "$pkgdir/usr/"
-
-  rm -rf "$pkgdir/lib"
-  find "$pkgdir" -type d -name .git -exec rm -r '{}' +
+	# Now we call depmod...
+	depmod -b "$pkgdir" -F System.map "$_kernver"
+	
+	# move module tree /lib -> /usr/lib
+	cp -a "$pkgdir/lib" "$pkgdir/usr/"
+	
+	rm -rf "$pkgdir/lib"
+	find "$pkgdir" -type d -name .git -exec rm -r '{}' +
 }
 
 package_linux-zen-git-headers() {
