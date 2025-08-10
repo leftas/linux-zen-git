@@ -2,7 +2,7 @@
 # Original PKGBUILD Contributor: Patrick Bartels <p4ddy.b@gmail.com>
 # Thanks to Bregol
 pkgname="linux-zen-git"
-pkgver=6.15.5+1355811+g7b9bc5b523e9
+pkgver=6.16.0+1369441+g6ab6b935205c
 _kernver=4.19.0+783746+g54d1f99f63e9
 pkgdesc="Featureful kernel including various new features, code and optimizations to better suit desktops"
 url="https://github.com/damentz/zen-kernel"
@@ -16,9 +16,9 @@ provides=("linux-zen")
 pkgrel=1
 options=(!strip !debug)
 source=("linux-zen.conf"
-  "linux-zen.preset"
-  'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.15/main')
-#'allow-disable-msr-lockdown.patch')
+        "linux-zen.preset"
+        'zen-kernel::git+https://github.com/zen-kernel/zen-kernel.git#branch=6.16/main')
+        #'allow-disable-msr-lockdown.patch')
 sha256sums=('6373073ad943e068478ef1373be4eb2a7e473da8743d946f1f50cd364685ab87'
   '71ac2dc114a2d56a75c1aa1b613fc0af7ee0af452536e4f2d5418909218d7be2'
   'SKIP')
