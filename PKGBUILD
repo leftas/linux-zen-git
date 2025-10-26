@@ -2,7 +2,7 @@
 # Original PKGBUILD Contributor: Patrick Bartels <p4ddy.b@gmail.com>
 # Thanks to Bregol
 pkgname="linux-zen-git"
-pkgver=6.17.1+1383790+g46023f82bf55
+pkgver=6.17.5+1385508+g20348932e896
 _kernver=4.19.0+783746+g54d1f99f63e9
 pkgdesc="Featureful kernel including various new features, code and optimizations to better suit desktops"
 url="https://github.com/damentz/zen-kernel"
@@ -24,7 +24,7 @@ sha256sums=('6373073ad943e068478ef1373be4eb2a7e473da8743d946f1f50cd364685ab87'
   'SKIP')
 #            'd19b97eb71b00d750c76aaf4bb2c4f783bebdfd36eb262219214e450c891a41d')
 
-_CORES=15
+_CORES=16
 
 # compress the modules or not
 _compress="y"
@@ -136,7 +136,7 @@ package_linux-zen-git() {
 	install -D -m644 "arch/x86/boot/bzImage" "$pkgdir/boot/vmlinuz-linux-zen"
 
 	msg2 "Installing modules (and firmware files)..."
-	make INSTALL_MOD_PATH="$pkgdir" modules_install
+  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir" modules_install INSTALL_MOD_STRIP=1
 
 	if [ -d "$pkgdir/lib/firmware" ]; then
 		msg2 "Removing firmware files..."
@@ -177,8 +177,8 @@ package_linux-zen-git() {
 	
 	install -D -m644 "${srcdir}/linux-zen.preset" \
 		"$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
-	sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
-		"$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
+	#sed -i "s/^ALL_kver=.*$/ALL_kver=$_kernver/" \
+	#	"$pkgdir/etc/mkinitcpio.d/linux-zen.preset"
 
 	# Now we call depmod...
 	depmod -b "$pkgdir" -F System.map "$_kernver"
